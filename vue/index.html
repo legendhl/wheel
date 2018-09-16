@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" name="viewport">
+<meta content="telephone=no" name="format-detection">
+<meta content="address=no" name="format-detection">
+<meta charset="utf-8" />
+<title>MyVue</title>
+</head>
+<body>
+<div id="app">
+    <h1>{{title}}</h1>
+    <input v-model="message">
+    <h1>{{message}}</h1>
+    <h1>{{reversedMessage}}</h1>
+    <button v-on:click="clickMe">click me!</button>
+</div>
+<script src="./myVue.js"></script>
+<script>
+let vm = new MyVue({
+    el: '#app',
+    data: {
+        title: 'hello',
+        message: 'haha',
+        complex: {
+            num: 1,
+            type: 'add'
+        }
+    },
+    methods: {
+        clickMe: function() {
+            console.log(this.reversedMessage);
+        }
+    },
+    computed: {
+        reversedMessage: function () {
+            return this.message.split('').reverse().join('')
+        }
+    }
+});
+</script>
+</body>
+</html>
