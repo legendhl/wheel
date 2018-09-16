@@ -11,7 +11,7 @@ class MyPromise {
             this.status = FULFILLED;
             this.value = val;
             if (this.resolveFunc) {
-                // async work
+                // using setTimeout to simulate micro task
                 setTimeout(() => {
                     this.resolveFunc(val);
                 }, 0);
