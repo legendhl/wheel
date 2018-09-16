@@ -1,39 +1,42 @@
-function MyPromise(fn) {
-    let that = this;
-    this.status = 'pending';
-    function resolve(val) {
-        that.status = 'resolved';
-        that.value = val;
-        if (that.resolveFunc) {
-            setTimeout(() => {
-                that.resolveFunc(val);
-            }, 0);
-        }
-    }
-    function reject(err) {
-        that.status = 'rejected';
-        that.error = err;
-        if (that.rejectFunc) {
-            setTimeout(() => {
-                that.rejectFunc(err);
-            }, 0);
-        }
-    }
-    fn.call(this, resolve, reject);
-}
+class MyPromise {
+    constructor(fn) {
+        this.status = 'pending';
+        fn.call(this, resolve.bind(this), reject.bind(this));
 
-MyPromise.prototype.then = function (resolveFunc, rejectFunc) {
-    if (this.status === 'resolved') {
-        setTimeout(() => {
-            resolveFunc(this.value);
-        }, 0);
-    } else if (this.status === 'rejected') {
-        setTimeout(() => {
-            rejectFunc(this.error);
-        }, 0);
-    } else {
-        this.resolveFunc = resolveFunc;
-        this.rejectFunc = rejectFunc;
+        function resolve(val) {
+            this.status = 'resolved';
+            this.value = val;
+            if (this.resolveFunc) {
+                // async work
+                setTimeout(() => {
+                    this.resolveFunc(val);
+                }, 0);
+            }
+        }
+        function reject(err) {
+            this.status = 'rejected';
+            this.error = err;
+            if (this.rejectFunc) {
+                setTimeout(() => {
+                    this.rejectFunc(err);
+                }, 0);
+            }
+        }
+    }
+
+    then(resolveFunc, rejectFunc) {
+        if (this.status === 'resolved') {
+            setTimeout(() => {
+                resolveFunc(this.value);
+            }, 0);
+        } else if (this.status === 'rejected') {
+            setTimeout(() => {
+                rejectFunc(this.error);
+            }, 0);
+        } else {
+            this.resolveFunc = resolveFunc;
+            this.rejectFunc = rejectFunc;
+        }
     }
 }
 
