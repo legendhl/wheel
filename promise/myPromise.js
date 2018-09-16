@@ -1,5 +1,5 @@
 const PENDING = Symbol('pending');
-const RESOLVED = Symbol('resolved');
+const FULFILLED = Symbol('fulfilled');
 const REJECTED = Symbol('rejected');
 
 class MyPromise {
@@ -8,7 +8,7 @@ class MyPromise {
         fn.call(this, resolve.bind(this), reject.bind(this));
 
         function resolve(val) {
-            this.status = RESOLVED;
+            this.status = FULFILLED;
             this.value = val;
             if (this.resolveFunc) {
                 // async work
@@ -29,7 +29,7 @@ class MyPromise {
     }
 
     then(resolveFunc, rejectFunc) {
-        if (this.status === RESOLVED) {
+        if (this.status === FULFILLED) {
             setTimeout(() => {
                 resolveFunc(this.value);
             }, 0);
