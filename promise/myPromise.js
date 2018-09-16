@@ -1,10 +1,14 @@
+const PENDING = Symbol('pending');
+const RESOLVED = Symbol('resolved');
+const REJECTED = Symbol('rejected');
+
 class MyPromise {
     constructor(fn) {
-        this.status = 'pending';
+        this.status = PENDING;
         fn.call(this, resolve.bind(this), reject.bind(this));
 
         function resolve(val) {
-            this.status = 'resolved';
+            this.status = RESOLVED;
             this.value = val;
             if (this.resolveFunc) {
                 // async work
@@ -14,7 +18,7 @@ class MyPromise {
             }
         }
         function reject(err) {
-            this.status = 'rejected';
+            this.status = REJECTED;
             this.error = err;
             if (this.rejectFunc) {
                 setTimeout(() => {
@@ -25,11 +29,11 @@ class MyPromise {
     }
 
     then(resolveFunc, rejectFunc) {
-        if (this.status === 'resolved') {
+        if (this.status === RESOLVED) {
             setTimeout(() => {
                 resolveFunc(this.value);
             }, 0);
-        } else if (this.status === 'rejected') {
+        } else if (this.status === REJECTED) {
             setTimeout(() => {
                 rejectFunc(this.error);
             }, 0);
