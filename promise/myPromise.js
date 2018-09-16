@@ -44,6 +44,30 @@ class MyPromise {
             this.rejectFunc = rejectFunc;
         }
     }
+
+    catch(rejectFunc) {
+
+    }
+
+    finally(finalFunc) {
+
+    }
+
+    static all(promiseArr) {
+
+    }
+
+    static race(promiseArr) {
+
+    }
+
+    static resolve(obj) {
+
+    }
+
+    static reject(obj) {
+
+    }
 }
 
 let p1 = new MyPromise((resolve, reject) => { setTimeout(() => resolve('p1'), 2000) });
