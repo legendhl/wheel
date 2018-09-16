@@ -29,6 +29,8 @@ class MyPromise {
     }
 
     then(resolveFunc, rejectFunc) {
+        resolveFunc = typeof resolveFunc === 'function' ? resolveFunc : function() {};
+        rejectFunc = typeof rejectFunc === 'function' ? rejectFunc : function() {};
         if (this.status === FULFILLED) {
             setTimeout(() => {
                 resolveFunc(this.value);
