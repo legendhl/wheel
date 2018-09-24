@@ -75,4 +75,4 @@ class MyPromise {
     }
 }
 
-module.exports = MyPromise;
+module.exports = { MyPromise, PENDING, FULFILLED, REJECTED };
