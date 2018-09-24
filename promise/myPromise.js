@@ -5,7 +5,11 @@ const REJECTED = Symbol('rejected');
 class MyPromise {
     constructor(fn) {
         this.status = PENDING;
-        fn.call(this, resolve.bind(this), reject.bind(this));
+        try {
+            fn.call(this, resolve.bind(this), reject.bind(this));
+        } catch (e) {
+            this.error = e;
+        }
 
         function resolve(val) {
             this.status = FULFILLED;
@@ -71,8 +75,4 @@ class MyPromise {
     }
 }
 
-let p1 = new MyPromise((resolve, reject) => { setTimeout(() => resolve('p1'), 2000) });
-let p2 = new MyPromise((resolve, reject) => { resolve('p2') });
-let p3 = p1.then(val => { console.log(`p1 val is ${val}`); return 123; });
-p2.then(val => { console.log(`p2 val is ${val}`); return 456; }).then(val => console.log(`another p2 val is ${val}`));
-p3.then(val => console.log(`p3 val is ${val}`));
+module.exports = MyPromise;
