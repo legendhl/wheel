@@ -42,17 +42,15 @@ describe('MyPromise的测试', function (done) {
         });
         expect(p1).to.not.be.equal(p2);
     });
-    // it('promise的状态可以传递', function (done) {
-    //     let p1 = new MyPromise((resolve, reject) => { setTimeout(() => reject('fail'), 100) });
-    //     let p2 = new MyPromise((resolve, reject) => { resolve(p1) });
-    //     p2.then(val => {
-    //         expect(val).to.not.be.ok;
-    //         done();
-    //     }, error => {
-    //         expect(error).to.be.equal('fail');
-    //         done();
-    //     });
-    // });
+    it('promise的状态可以传递', function (done) {
+        let p1 = new MyPromise((resolve, reject) => { setTimeout(() => reject('fail'), 100) });
+        let p2 = new MyPromise((resolve, reject) => { resolve(p1) });
+        p2.then(val => {
+        }, error => {
+            expect(error).to.be.equal('fail');
+            done();
+        });
+    });
     it('then可以链式传递参数', function (done) {
         let p1 = new MyPromise((resolve, reject) => { resolve('first') });
         p1.then(val => { expect(val).to.be.equal('first'); return 'second'; })

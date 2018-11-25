@@ -2,6 +2,11 @@ const PENDING = Symbol('pending');
 const FULFILLED = Symbol('fulfilled');
 const REJECTED = Symbol('rejected');
 
+// using setTimeout to simulate micro task
+function microTask(fn) {
+    setTimeout(fn, 0);
+}
+
 class MyPromise {
     constructor(fn) {
         this.status = PENDING;
@@ -12,22 +17,33 @@ class MyPromise {
         }
 
         function resolve(val) {
+            if (val instanceof MyPromise) {
+                let prePro = val;
+                prePro.then(value => {
+                    this.value = val;
+                    if (this.resolveFunc) {
+                        microTask(() => { this.resolveFunc(val) });
+                    }
+                }, error => {
+                    this.status = REJECTED;
+                    this.error = error;
+                    if (this.rejectFunc) {
+                        microTask(() => { this.rejectFunc(error) });
+                    }
+                })
+                return;
+            }
             this.status = FULFILLED;
             this.value = val;
             if (this.resolveFunc) {
-                // using setTimeout to simulate micro task
-                setTimeout(() => {
-                    this.resolveFunc(val);
-                }, 0);
+                microTask(() => { this.resolveFunc(val) });
             }
         }
         function reject(err) {
             this.status = REJECTED;
             this.error = err;
             if (this.rejectFunc) {
-                setTimeout(() => {
-                    this.rejectFunc(err);
-                }, 0);
+                microTask(() => { this.rejectFunc(err) });
             }
         }
     }
@@ -39,13 +55,9 @@ class MyPromise {
             this.resolveFunc = ((...args) => { let res = resolveFunc.apply(this, args); resolve(res); }).bind(this);
             this.rejectFunc = ((...args) => { let res = rejectFunc.apply(this, args); reject(res); }).bind(this);
             if (this.status === FULFILLED) {
-                setTimeout(() => {
-                    this.resolveFunc(this.value);
-                }, 0);
+                microTask(() => { this.resolveFunc(this.value) });
             } else if (this.status === REJECTED) {
-                setTimeout(() => {
-                    this.rejectFunc(this.error);
-                }, 0);
+                microTask(() => { this.rejectFunc(this.error) });
             }
         });
     }
