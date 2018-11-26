@@ -8,12 +8,34 @@ describe('MyPromise的测试', function (done) {
                 expect(val).to.be.equal('done');
             });
     });
+    it('多个同步resolve获取数据', function (done) {
+        let p1 = new MyPromise((resolve, reject) => { resolve('done') })
+        let p2 = p1.then(val => {
+            expect(val).to.be.equal('done');
+            return 'hello p1';
+        });
+        p2.then(val => {
+            expect(val).to.be.equal('hello p1');
+            done();
+        });
+    });
     it('异步resolve获取数据', function (done) {
         new MyPromise((resolve, reject) => { setTimeout(() => resolve('timeout'), 100) })
             .then(val => {
                 expect(val).to.be.equal('timeout')
                 done();
             });
+    });
+    it('多个异步resolve获取数据', function (done) {
+        let p1 = new MyPromise((resolve, reject) => { setTimeout(() => resolve('timeout1'), 100) })
+        let p2 = p1.then(val => {
+            expect(val).to.be.equal('timeout1');
+            return new MyPromise((resolve, reject) => { setTimeout(() => resolve('timeout2'), 100) });
+        });
+        p2.then(val => {
+            expect(val).to.be.equal('timeout2');
+            done();
+        });
     });
     it('同步reject', function () {
         new MyPromise((resolve, reject) => { reject('fail') })
@@ -58,5 +80,14 @@ describe('MyPromise的测试', function (done) {
                 expect(val).to.be.equal('second');
                 done();
             });
+    });
+    it('promise.prototype.catch', function () {
+        let p = new MyPromise((resolve, reject) => {
+            throw new Error('catch');
+        });
+        p.catch(error => {
+            expect(Object.prototype.toString.call(error)).to.be.equal('[object Error]');
+            expect(error.message).to.include('catch');
+        });
     });
 });

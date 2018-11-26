@@ -8,62 +8,99 @@ function microTask(fn) {
 }
 
 class MyPromise {
-    constructor(fn) {
-        this.status = PENDING;
+    constructor(handler) {
+        this._status = PENDING;
+        this._fulfilledQueues = [];
+        this._rejectedQueues = [];
         try {
-            fn.call(this, resolve.bind(this), reject.bind(this));
+            handler.call(this, resolve.bind(this), reject.bind(this));
         } catch (e) {
-            this.error = e;
+            reject.call(this, e);
         }
 
         function resolve(val) {
-            if (val instanceof MyPromise) {
-                let prePro = val;
-                prePro.then(value => {
-                    this.value = val;
-                    if (this.resolveFunc) {
-                        microTask(() => { this.resolveFunc(val) });
+            if (this._status !== PENDING) return;
+            let run = () => {
+                if (val instanceof MyPromise) {
+                    let prePro = val;
+                    prePro.then(val => {
+                        this._status = FULFILLED;
+                        this._value = val;
+                        while (this._fulfilledQueues.length) {
+                            let cb = this._fulfilledQueues.shift();
+                            cb(this._value);
+                        }
+                    }, error => {
+                        this._status = REJECTED;
+                        this._value = error;
+                        while (this._rejectedQueues.length) {
+                            let cb = this._rejectedQueues.shift();
+                            cb(this._value);
+                        }
+                    })
+                } else {
+                    this._status = FULFILLED;
+                    this._value = val;
+                    while (this._fulfilledQueues.length) {
+                        let cb = this._fulfilledQueues.shift();
+                        cb(this._value);
                     }
-                }, error => {
-                    this.status = REJECTED;
-                    this.error = error;
-                    if (this.rejectFunc) {
-                        microTask(() => { this.rejectFunc(error) });
-                    }
-                })
-                return;
+                }
             }
-            this.status = FULFILLED;
-            this.value = val;
-            if (this.resolveFunc) {
-                microTask(() => { this.resolveFunc(val) });
-            }
+            microTask(() => { run() });
         }
         function reject(err) {
-            this.status = REJECTED;
-            this.error = err;
-            if (this.rejectFunc) {
-                microTask(() => { this.rejectFunc(err) });
+            if (this._status !== PENDING) return;
+            this._status = REJECTED;
+            this._value = err;
+            let run = () => {
+                while (this._rejectedQueues.length) {
+                    let cb = this._rejectedQueues.shift();
+                    cb(this._value);
+                }
             }
+            microTask(() => { run() });
         }
     }
 
-    then(resolveFunc, rejectFunc) {
-        resolveFunc = typeof resolveFunc === 'function' ? resolveFunc : function () { };
-        rejectFunc = typeof rejectFunc === 'function' ? rejectFunc : function () { };
+    then(onFulfilled, onRejected) {
         return new MyPromise((resolve, reject) => {
-            this.resolveFunc = ((...args) => { let res = resolveFunc.apply(this, args); resolve(res); }).bind(this);
-            this.rejectFunc = ((...args) => { let res = rejectFunc.apply(this, args); reject(res); }).bind(this);
-            if (this.status === FULFILLED) {
-                microTask(() => { this.resolveFunc(this.value) });
-            } else if (this.status === REJECTED) {
-                microTask(() => { this.rejectFunc(this.error) });
+            let fulfilled = value => {
+                try {
+                    onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : function () { };
+                    let res = onFulfilled(value);
+                    resolve(res);
+                } catch (e) {
+                    reject(e);
+                }
+            }
+            let rejected = value => {
+                try {
+                    onRejected = typeof onRejected === 'function' ? onRejected : function () { };
+                    let res = onRejected(value);
+                    resolve(res);
+                } catch (e) {
+                    reject(e);
+                }
+            }
+            const { _status, _value } = this;
+            switch (_status) {
+                case PENDING:
+                    this._fulfilledQueues.push(fulfilled);
+                    this._rejectedQueues.push(rejected);
+                    break;
+                case FULFILLED:
+                    microTask(() => { fulfilled(_value) });
+                    break;
+                case REJECTED:
+                    microTask(() => { rejected(_value) });
+                    break;
             }
         });
     }
 
-    catch(rejectFunc) {
-
+    catch(onRejected) {
+        return this.then(null, onRejected);
     }
 
     finally(finalFunc) {
