@@ -103,24 +103,55 @@ class MyPromise {
         return this.then(null, onRejected);
     }
 
-    finally(finalFunc) {
-
+    finally(onFinally) {
+        return this.then(
+            value => MyPromise.resolve(onFinally()).then(() => value),
+            reason => MyPromise.resolve(onFinally()).then(() => { throw reason })
+        );
     }
 
-    static all(promiseArr) {
-
+    static all(promises) {
+        promises = promises.map(promise => MyPromise.resolve(promise));
+        return new MyPromise((resolve, reject) => {
+            let size = promises.length;
+            const results = Array(size);
+            promises.forEach((promise, index) => {
+                promise.then(val => {
+                    results[index] = val;
+                    size--;
+                    if (size === 0) { resolve(results) }
+                }, err => {
+                    reject(err);
+                })
+            })
+        });
     }
 
-    static race(promiseArr) {
-
+    static race(promises) {
+        promises = promises.map(promise => MyPromise.resolve(promise));
+        return new MyPromise((resolve, reject) => {
+            promises.forEach(promise => {
+                promise.then(val => {
+                    resolve(val);
+                }, err => {
+                    reject(err);
+                })
+            })
+        })
     }
 
     static resolve(obj) {
-
+        if (obj instanceof MyPromise) {
+            return obj;
+        } else if (obj && typeof obj.then === 'function') {
+            return new MyPromise(obj.then);
+        } else {
+            return new Promise((resolve, reject) => { resolve(obj) });
+        }
     }
 
-    static reject(obj) {
-
+    static reject(reason) {
+        return new Promise((resolve, reject) => { reject(reason) });
     }
 }
 
